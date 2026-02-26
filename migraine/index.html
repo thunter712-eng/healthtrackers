@@ -746,7 +746,7 @@
   <!-- History Section -->
   <div class="card" style="margin-top: 20px;">
     <div class="history-header" id="historyToggle">
-      <h2>History</h2>
+      <h2>History <span id="historyCount" style="font-size: 14px; color: #a0aec0; font-weight: 400;"></span></h2>
       <span class="chevron" id="chevron">&#9660;</span>
     </div>
 
@@ -1024,6 +1024,20 @@
   }
 
   // ═══════════════════════════════════════════════════════
+  //  HISTORY COUNT BADGE
+  // ═══════════════════════════════════════════════════════
+
+  /** Update the "(N entries)" count shown next to the History header */
+  function updateHistoryCount() {
+    const countEl = document.getElementById('historyCount');
+    if (entries.length > 0) {
+      countEl.textContent = `(${entries.length} entr${entries.length === 1 ? 'y' : 'ies'})`;
+    } else {
+      countEl.textContent = '';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
   //  RENDER HISTORY
   // ═══════════════════════════════════════════════════════
 
@@ -1111,7 +1125,16 @@
 
     entries.push(entry);
     saveEntries();
+
+    // Auto-expand history so the user can see the new entry immediately
+    if (!historyOpen) {
+      historyOpen = true;
+      historyContent.style.display = 'block';
+      chevron.classList.add('open');
+    }
+
     renderHistory();
+    updateHistoryCount();
     resetForm();
     showToast('Entry logged!');
   }
@@ -1151,6 +1174,7 @@
     entries = entries.filter(e => e.id !== id);
     saveEntries();
     renderHistory();
+    updateHistoryCount();
     showToast('Entry deleted');
   }
 
@@ -1271,6 +1295,7 @@
 
         saveEntries();
         renderHistory();
+        updateHistoryCount();
         showToast(`Imported ${importedCount} new entry${importedCount !== 1 ? 's' : ''}`);
       } catch (err) {
         showToast('Could not read the CSV file');
@@ -1524,8 +1549,17 @@
 
     buildAuraGrid();
 
-    // Load saved entries
+    // Load saved entries and show them immediately
     loadEntries();
+    updateHistoryCount();
+
+    // Auto-expand History on page load if there are entries
+    if (entries.length > 0) {
+      historyOpen = true;
+      historyContent.style.display = 'block';
+      chevron.classList.add('open');
+      renderHistory();
+    }
   })();
 </script>
 </body>
