@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Health Trackers</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* ── Floating Shapes (background decoration) ──── */
+    .bg-shapes {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.08;
+      background: #fff;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .shape:nth-child(1) { width: 300px; height: 300px; top: -80px; left: -60px; animation-delay: 0s; }
+    .shape:nth-child(2) { width: 200px; height: 200px; bottom: -40px; right: -40px; animation-delay: -5s; }
+    .shape:nth-child(3) { width: 150px; height: 150px; top: 40%; left: 60%; animation-delay: -10s; }
+    .shape:nth-child(4) { width: 100px; height: 100px; top: 20%; right: 10%; animation-delay: -15s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      33% { transform: translateY(-20px) rotate(5deg); }
+      66% { transform: translateY(10px) rotate(-3deg); }
+    }
+
+    /* ── Header ───────────────────────────────────── */
+    .header {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 40px;
+      animation: fadeDown 0.8s ease-out;
+    }
+
+    .header-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+
+    .header p {
+      font-size: 16px;
+      color: rgba(255,255,255,0.85);
+      margin-top: 6px;
+      font-weight: 400;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Tracker Cards ────────────────────────────── */
+    .cards {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 28px 24px;
+      box-shadow:
+        0 10px 40px rgba(0,0,0,0.12),
+        0 2px 10px rgba(0,0,0,0.06);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      transition: height 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.18),
+        0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .card:hover::before {
+      height: 6px;
+    }
+
+    .card:active {
+      transform: translateY(-2px) scale(0.99);
+      transition-duration: 0.1s;
+    }
+
+    /* Card-specific accent colors */
+    .card-migraine::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+    .card-pots::before { background: linear-gradient(90deg, #14b8a6, #0ea5e9); }
+
+    .card-migraine:hover { box-shadow: 0 20px 60px rgba(102,126,234,0.25), 0 4px 16px rgba(0,0,0,0.08); }
+    .card-pots:hover { box-shadow: 0 20px 60px rgba(20,184,166,0.25), 0 4px 16px rgba(0,0,0,0.08); }
+
+    /* Card entrance animations */
+    .card:nth-child(1) { animation: slideUp 0.6s ease-out 0.2s both; }
+    .card:nth-child(2) { animation: slideUp 0.6s ease-out 0.4s both; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card inner layout */
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .card-emoji {
+      font-size: 42px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.1));
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .card:hover .card-emoji {
+      transform: scale(1.15) rotate(-5deg);
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a202c;
+      text-align: left;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: #718096;
+      line-height: 1.6;
+      text-align: left;
+    }
+
+    .card-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      margin-top: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: gap 0.3s ease;
+      gap: 6px;
+    }
+
+    .card-migraine .card-arrow { color: #667eea; }
+    .card-pots .card-arrow { color: #14b8a6; }
+
+    .card:hover .card-arrow { gap: 10px; }
+
+    .arrow-icon {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover .arrow-icon {
+      transform: translateX(4px);
+    }
+
+    /* ── Footer ───────────────────────────────────── */
+    .footer {
+      position: relative;
+      z-index: 1;
+      margin-top: 40px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      animation: fadeDown 0.8s ease-out 0.6s both;
+    }
+
+    /* ── Sparkle animation on hover ───────────────── */
+    .sparkle-container {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      overflow: hidden;
+      border-radius: 20px;
+    }
+
+    .card:hover .sparkle {
+      animation: sparkle 0.6s ease-out forwards;
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      opacity: 0;
+    }
+
+    .card-migraine .sparkle { background: #667eea; }
+    .card-pots .sparkle { background: #14b8a6; }
+
+    .sparkle:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+    .sparkle:nth-child(2) { top: 60%; left: 80%; animation-delay: 0.1s; }
+    .sparkle:nth-child(3) { top: 30%; left: 60%; animation-delay: 0.2s; }
+    .sparkle:nth-child(4) { top: 80%; left: 30%; animation-delay: 0.15s; }
+    .sparkle:nth-child(5) { top: 10%; left: 90%; animation-delay: 0.05s; }
+
+    @keyframes sparkle {
+      0% { opacity: 0; transform: scale(0); }
+      50% { opacity: 0.6; transform: scale(1.5); }
+      100% { opacity: 0; transform: scale(0); }
+    }
+
+    /* ── Responsive ───────────────────────────────── */
+    @media (min-width: 600px) {
+      .header h1 { font-size: 38px; }
+      .card { padding: 32px 28px; }
+    }
+
+    @media (max-width: 360px) {
+      .header h1 { font-size: 26px; }
+      .card-emoji { font-size: 36px; }
+      .card-title { font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background decoration -->
+  <div class="bg-shapes">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+  </div>
+
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-icon">&#x1F3E0;</div>
+      <h1>Health Trackers</h1>
+      <p>Tap your tracker to get started</p>
+    </div>
+
+    <!-- Tracker Cards -->
+    <div class="cards">
+      <!-- Migraine Tracker -->
+      <a href="migraine/" class="card-link">
+        <div class="card card-migraine">
+          <div class="sparkle-container">
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+          </div>
+          <div class="card-top">
+            <div class="card-emoji">&#x1F4AB;</div>
+            <div class="card-title">Migraine Tracker</div>
+          </div>
+          <div class="card-desc">
+            Log headaches, track pain levels, identify triggers and patterns.
+            Includes a doctor summary with charts and stats.
+          </div>
+          <div class="card-arrow">
+            Open Tracker <span class="arrow-icon">&#x2192;</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- POTS Tracker -->
+      <a href="pots/" class="card-link">
+        <div class="card card-pots">
+          <div class="sparkle-container">
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+          </div>
+          <div class="card-top">
+            <div class="card-emoji">&#x1F497;</div>
+            <div class="card-title">POTS Tracker</div>
+          </div>
+          <div class="card-desc">
+            Track heart rate by position, symptoms, triggers, medications,
+            and fluids. Auto-calculates standing HR delta.
+          </div>
+          <div class="card-arrow">
+            Open Tracker <span class="arrow-icon">&#x2192;</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      All data stays on your device &bull; Nothing is sent to any server
+    </div>
+  </div>
+</body>
+</html>

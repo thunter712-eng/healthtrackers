@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Migraine Tracker">
+  <title>Migraine Tracker</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f0ebf8;
+      color: #4a5568;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+      min-height: 100vh;
+    }
+
+    /* ── App Container ────────────────────────────────── */
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+      padding-top: env(safe-area-inset-top, 16px);
+      padding-bottom: 32px;
+    }
+
+    /* ── Header ───────────────────────────────────────── */
+    .app-header {
+      text-align: center;
+      padding: 20px 0 12px;
+    }
+
+    .app-header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #5a67d8;
+      margin-bottom: 2px;
+    }
+
+    .app-header .subtitle {
+      font-size: 13px;
+      color: #a0aec0;
+    }
+
+    /* ── Cards ─────────────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #5a67d8;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Date Input ────────────────────────────────────── */
+    .date-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 10px;
+      font-size: 16px;
+      color: #1a202c;
+      background: #fff;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+
+    /* ── Toggle Grid ──────────────────────────────────── */
+    .toggle-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 8px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      color: #4a5568;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 44px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .toggle-btn:active {
+      opacity: 0.7;
+    }
+
+    /* Active states for different toggle categories */
+    .toggle-btn.active-default {
+      background: #ebf0ff;
+      border-color: #667eea;
+      color: #5a67d8;
+    }
+
+    .toggle-btn.active-trigger {
+      background: #fef3c7;
+      border-color: #d97706;
+      color: #92400e;
+    }
+
+    .toggle-btn.active-medication {
+      background: #e0f2fe;
+      border-color: #0284c7;
+      color: #0369a1;
+    }
+
+    /* Severity buttons (single-select, 3 columns) */
+    .severity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .toggle-btn.active-mild {
+      background: #c6f6d5;
+      border-color: #48bb78;
+      color: #276749;
+    }
+
+    .toggle-btn.active-moderate {
+      background: #fefcbf;
+      border-color: #ecc94b;
+      color: #975a16;
+    }
+
+    .toggle-btn.active-severe {
+      background: #fed7d7;
+      border-color: #fc8181;
+      color: #c53030;
+    }
+
+    /* Aura buttons (2-column) */
+    .aura-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* ── Duration Inputs ──────────────────────────────── */
+    .duration-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .duration-group {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .duration-input {
+      width: 60px;
+      padding: 10px 12px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 10px;
+      font-size: 16px;
+      color: #1a202c;
+      text-align: center;
+      background: #fff;
+      -webkit-appearance: none;
+    }
+
+    .duration-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+
+    .duration-label {
+      font-size: 14px;
+      color: #718096;
+    }
+
+    /* ── Notes Textarea ───────────────────────────────── */
+    .notes-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 10px;
+      font-size: 15px;
+      color: #1a202c;
+      background: #fff;
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+      -webkit-appearance: none;
+    }
+
+    .notes-textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+
+    .notes-textarea::placeholder {
+      color: #a0aec0;
+    }
+
+    /* ── Buttons ───────────────────────────────────────── */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s ease;
+      min-height: 48px;
+    }
+
+    .btn:active {
+      opacity: 0.7;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: #fff;
+    }
+
+    .btn-success {
+      background: #48bb78;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #edf2f7;
+      color: #4a5568;
+    }
+
+    .btn-danger {
+      background: #fc8181;
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 13px;
+      width: auto;
+      min-height: 36px;
+      border-radius: 8px;
+    }
+
+    .btn-summary {
+      background: #5a67d8;
+      color: #fff;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn-row .btn {
+      flex: 1;
+    }
+
+    /* ── History Section ───────────────────────────────── */
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      padding: 4px 0;
+    }
+
+    .history-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .chevron {
+      font-size: 18px;
+      color: #a0aec0;
+      transition: transform 0.2s ease;
+    }
+
+    .chevron.open {
+      transform: rotate(180deg);
+    }
+
+    .history-list {
+      margin-top: 12px;
+    }
+
+    /* ── Entry Card (in history) ──────────────────────── */
+    .entry-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .entry-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .entry-date {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .entry-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .severity-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .severity-badge.mild {
+      background: #c6f6d5;
+      color: #276749;
+    }
+
+    .severity-badge.moderate {
+      background: #fefcbf;
+      color: #975a16;
+    }
+
+    .severity-badge.severe {
+      background: #fed7d7;
+      color: #c53030;
+    }
+
+    .entry-duration {
+      font-size: 13px;
+      color: #718096;
+    }
+
+    /* Tag styles */
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tag-location {
+      background: #ebf0ff;
+      color: #5a67d8;
+    }
+
+    .tag-symptom {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    .tag-trigger {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .tag-medication {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .entry-aura {
+      font-size: 12px;
+      color: #718096;
+      margin-bottom: 4px;
+    }
+
+    .entry-notes {
+      font-size: 13px;
+      color: #718096;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* ── Toast Notification ────────────────────────────── */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: #2d3748;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Doctor Summary Screen ─────────────────────────── */
+    .summary-screen {
+      display: none;
+    }
+
+    .summary-screen.active {
+      display: block;
+    }
+
+    .tracker-screen.hidden {
+      display: none;
+    }
+
+    .summary-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: #5a67d8;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 0;
+      -webkit-tap-highlight-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .summary-title {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .summary-title h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #5a67d8;
+    }
+
+    .summary-date-range {
+      text-align: center;
+      font-size: 13px;
+      color: #718096;
+      margin-bottom: 16px;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .stat-box.default {
+      background: #ebf0ff;
+    }
+
+    .stat-box.mild {
+      background: #c6f6d5;
+    }
+
+    .stat-box.moderate {
+      background: #fefcbf;
+    }
+
+    .stat-box.severe {
+      background: #fed7d7;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .stat-box.default .stat-number { color: #5a67d8; }
+    .stat-box.mild .stat-number { color: #276749; }
+    .stat-box.moderate .stat-number { color: #975a16; }
+    .stat-box.severe .stat-number { color: #c53030; }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 2px;
+    }
+
+    .stat-box.default .stat-label { color: #5a67d8; }
+    .stat-box.mild .stat-label { color: #276749; }
+    .stat-box.moderate .stat-label { color: #975a16; }
+    .stat-box.severe .stat-label { color: #c53030; }
+
+    /* Frequency sections */
+    .freq-section {
+      margin-bottom: 18px;
+    }
+
+    .freq-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+
+    .freq-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .freq-chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .freq-chip.trigger {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .freq-chip.symptom {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    /* Recent entries table */
+    .recent-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+
+    .recent-table th {
+      font-size: 11px;
+      font-weight: 600;
+      color: #718096;
+      text-align: left;
+      padding: 6px 4px;
+      border-bottom: 1px solid #e2e8f0;
+      text-transform: uppercase;
+    }
+
+    .recent-table td {
+      font-size: 13px;
+      color: #4a5568;
+      padding: 8px 4px;
+      border-bottom: 1px solid #f7fafc;
+      vertical-align: top;
+    }
+
+    .recent-table .severity-cell {
+      /* small inline badge in the table */
+    }
+
+    .mini-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .mini-badge.mild { background: #c6f6d5; color: #276749; }
+    .mini-badge.moderate { background: #fefcbf; color: #975a16; }
+    .mini-badge.severe { background: #fed7d7; color: #c53030; }
+
+    .latest-note-section {
+      margin-top: 8px;
+    }
+
+    .latest-note-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #718096;
+      margin-bottom: 4px;
+    }
+
+    .latest-note-text {
+      font-size: 14px;
+      color: #4a5568;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* ── Utility ───────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      color: #a0aec0;
+      font-size: 14px;
+      padding: 24px 0;
+    }
+
+    .hidden-file-input {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden file input for CSV import -->
+<input type="file" accept=".csv" class="hidden-file-input" id="csvFileInput">
+
+<!-- ═══ Tracker Screen ═══════════════════════════════ -->
+<div class="app-container tracker-screen" id="trackerScreen">
+
+  <div class="app-header">
+    <h1>Migraine Tracker</h1>
+    <div class="subtitle">Track &middot; Understand &middot; Manage</div>
+  </div>
+
+  <!-- Date -->
+  <div class="card">
+    <div class="section-label">Date</div>
+    <input type="date" class="date-input" id="dateInput">
+  </div>
+
+  <!-- Severity -->
+  <div class="card">
+    <div class="section-label">Pain Severity</div>
+    <div class="severity-grid" id="severityGrid"></div>
+  </div>
+
+  <!-- Pain Location -->
+  <div class="card">
+    <div class="section-label">Pain Location</div>
+    <div class="toggle-grid" id="locationGrid"></div>
+  </div>
+
+  <!-- Duration -->
+  <div class="card">
+    <div class="section-label">Duration</div>
+    <div class="duration-row">
+      <div class="duration-group">
+        <input type="number" class="duration-input" id="durationHours" min="0" max="99" placeholder="0">
+        <span class="duration-label">hours</span>
+      </div>
+      <div class="duration-group">
+        <input type="number" class="duration-input" id="durationMinutes" min="0" max="59" placeholder="0">
+        <span class="duration-label">min</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Symptoms -->
+  <div class="card">
+    <div class="section-label">Symptoms</div>
+    <div class="toggle-grid" id="symptomsGrid"></div>
+  </div>
+
+  <!-- Triggers -->
+  <div class="card">
+    <div class="section-label">Triggers</div>
+    <div class="toggle-grid" id="triggersGrid"></div>
+  </div>
+
+  <!-- Medications -->
+  <div class="card">
+    <div class="section-label">Medications</div>
+    <div class="toggle-grid" id="medicationsGrid"></div>
+  </div>
+
+  <!-- Aura -->
+  <div class="card">
+    <div class="section-label">Aura</div>
+    <div class="aura-grid" id="auraGrid"></div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="section-label">Notes</div>
+    <textarea class="notes-textarea" id="notesInput" placeholder="Optional notes about this episode..." rows="3"></textarea>
+  </div>
+
+  <!-- Log Entry Button -->
+  <button class="btn btn-primary" id="logEntryBtn">Log Entry</button>
+
+  <!-- History Section -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="history-header" id="historyToggle">
+      <h2>History</h2>
+      <span class="chevron" id="chevron">&#9660;</span>
+    </div>
+
+    <div id="historyContent" style="display: none;">
+      <!-- Export / Import / Summary buttons -->
+      <div class="btn-row" style="margin-top: 12px;">
+        <button class="btn btn-success" id="exportBtn">Export CSV</button>
+        <button class="btn btn-secondary" id="importBtn">Import CSV</button>
+      </div>
+      <button class="btn btn-summary" id="summaryBtn" style="margin-bottom: 12px;">Doctor Summary</button>
+
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ Doctor Summary Screen ════════════════════════ -->
+<div class="app-container summary-screen" id="summaryScreen">
+
+  <button class="summary-back-btn" id="summaryBackBtn">&larr; Back to Tracker</button>
+
+  <div class="card">
+    <div class="summary-title">
+      <h2>Migraine Log</h2>
+    </div>
+    <div class="summary-date-range" id="summaryDateRange"></div>
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="statsRow"></div>
+
+    <!-- Trigger Frequency -->
+    <div class="freq-section" id="triggerFreqSection"></div>
+
+    <!-- Symptom Frequency -->
+    <div class="freq-section" id="symptomFreqSection"></div>
+
+    <!-- Recent Entries Table -->
+    <div id="recentTableContainer"></div>
+
+    <!-- Latest Note -->
+    <div id="latestNoteContainer"></div>
+  </div>
+
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════
+  //  CONSTANTS  (identical to the Expo app)
+  // ═══════════════════════════════════════════════════════
+
+  const STORAGE_KEY = 'migraine_tracker_entries';
+
+  const SEVERITY_LEVELS = ['Mild', 'Moderate', 'Severe'];
+
+  const PAIN_LOCATIONS = [
+    'Left Side', 'Right Side', 'Front/Forehead',
+    'Back of Head', 'All Over', 'Behind Eyes',
+  ];
+
+  const SYMPTOMS = [
+    'Light Sensitivity', 'Sound Sensitivity', 'Nausea',
+    'Vomiting', 'Blurred Vision', 'Neck Stiffness',
+    'Dizziness', 'Fatigue', 'Difficulty Concentrating',
+    'Throbbing Pain', 'Nasal Congestion', 'Eye Watering',
+  ];
+
+  const TRIGGERS = [
+    'Stress', 'Lack of Sleep', 'Weather Changes',
+    'Bright Lights', 'Loud Noises', 'Strong Smells',
+    'Alcohol', 'Caffeine (too much)', 'Caffeine Withdrawal',
+    'Dehydration', 'Skipped Meal', 'Hormonal Changes',
+    'Screen Time', 'Physical Exertion',
+  ];
+
+  const MEDICATIONS = [
+    'Ibuprofen', 'Acetaminophen', 'Aspirin',
+    'Excedrin/Combination', 'Sumatriptan', 'Rizatriptan',
+    'Zolmitriptan', 'Anti-Nausea Med', 'Prescription (Other)',
+  ];
+
+  // ═══════════════════════════════════════════════════════
+  //  STATE
+  // ═══════════════════════════════════════════════════════
+
+  let entries = [];          // array of migraine entry objects
+  let severity = '';         // single-select: 'Mild' | 'Moderate' | 'Severe' | ''
+  let painLocations = [];    // multi-select array
+  let symptoms = [];         // multi-select array
+  let triggers = [];         // multi-select array
+  let medications = [];      // multi-select array
+  let aura = null;           // true | false | null
+  let historyOpen = false;   // is history section expanded?
+
+  // ═══════════════════════════════════════════════════════
+  //  DOM REFERENCES
+  // ═══════════════════════════════════════════════════════
+
+  const dateInput = document.getElementById('dateInput');
+  const durationHours = document.getElementById('durationHours');
+  const durationMinutes = document.getElementById('durationMinutes');
+  const notesInput = document.getElementById('notesInput');
+  const historyList = document.getElementById('historyList');
+  const historyContent = document.getElementById('historyContent');
+  const chevron = document.getElementById('chevron');
+  const csvFileInput = document.getElementById('csvFileInput');
+
+  // ═══════════════════════════════════════════════════════
+  //  HELPER FUNCTIONS
+  // ═══════════════════════════════════════════════════════
+
+  /** Format today's date as YYYY-MM-DD */
+  function todayStr() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  /** Abbreviate a YYYY-MM-DD date to "Feb 25" style */
+  function shortDate(iso) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const parts = iso.split('-');
+    if (parts.length < 3) return iso;
+    const mIdx = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    return `${months[mIdx]} ${day}`;
+  }
+
+  /** Build a duration string like "1h 30m" from hours + minutes */
+  function buildDuration(h, m) {
+    const hours = parseInt(h, 10) || 0;
+    const mins = parseInt(m, 10) || 0;
+    if (hours === 0 && mins === 0) return '';
+    let s = '';
+    if (hours > 0) s += hours + 'h';
+    if (mins > 0) s += (s ? ' ' : '') + mins + 'm';
+    return s;
+  }
+
+  /** Show a toast notification */
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  /** Sort entries newest-first, then by id descending */
+  function sortEntries(arr) {
+    return arr.slice().sort((a, b) => {
+      const cmp = b.date.localeCompare(a.date);
+      if (cmp !== 0) return cmp;
+      return b.id - a.id;
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  LOCAL STORAGE
+  // ═══════════════════════════════════════════════════════
+
+  function loadEntries() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      entries = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      entries = [];
+    }
+  }
+
+  function saveEntries() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  BUILD TOGGLE GRIDS (one-time setup)
+  // ═══════════════════════════════════════════════════════
+
+  /** Create toggle buttons inside a container.
+   *  mode: 'single' or 'multi'
+   *  activeClass: CSS class when active (e.g. 'active-default')
+   */
+  function buildToggleGrid(containerId, items, mode, activeClass, onUpdate) {
+    const container = document.getElementById(containerId);
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toggle-btn';
+      btn.textContent = item;
+      btn.dataset.value = item;
+
+      btn.addEventListener('click', () => {
+        if (mode === 'single') {
+          // Deselect all siblings first
+          container.querySelectorAll('.toggle-btn').forEach(b => {
+            b.classList.remove(activeClass);
+            // Also remove severity-specific classes
+            b.classList.remove('active-mild', 'active-moderate', 'active-severe');
+          });
+          btn.classList.add(activeClass);
+          onUpdate(item);
+        } else {
+          // Toggle this button
+          btn.classList.toggle(activeClass);
+          onUpdate(getActiveValues(containerId, activeClass));
+        }
+      });
+
+      container.appendChild(btn);
+    });
+  }
+
+  /** Collect the values of all active buttons in a container */
+  function getActiveValues(containerId, activeClass) {
+    const btns = document.getElementById(containerId).querySelectorAll('.' + activeClass);
+    return Array.from(btns).map(b => b.dataset.value);
+  }
+
+  // Build severity grid (single-select with per-level colors)
+  function buildSeverityGrid() {
+    const container = document.getElementById('severityGrid');
+    const colorMap = {
+      'Mild':     'active-mild',
+      'Moderate': 'active-moderate',
+      'Severe':   'active-severe',
+    };
+
+    SEVERITY_LEVELS.forEach(level => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toggle-btn';
+      btn.textContent = level;
+      btn.dataset.value = level;
+
+      btn.addEventListener('click', () => {
+        // Deselect all
+        container.querySelectorAll('.toggle-btn').forEach(b => {
+          b.classList.remove('active-mild', 'active-moderate', 'active-severe');
+        });
+        btn.classList.add(colorMap[level]);
+        severity = level;
+      });
+
+      container.appendChild(btn);
+    });
+  }
+
+  // Build aura grid (ternary: Yes/No/unselected)
+  function buildAuraGrid() {
+    const container = document.getElementById('auraGrid');
+    ['Yes', 'No'].forEach(label => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toggle-btn';
+      btn.textContent = label;
+      btn.dataset.value = label;
+
+      btn.addEventListener('click', () => {
+        const newVal = label === 'Yes' ? true : false;
+        if (aura === newVal) {
+          // Tap again to deselect
+          aura = null;
+          btn.classList.remove('active-default');
+        } else {
+          container.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active-default'));
+          btn.classList.add('active-default');
+          aura = newVal;
+        }
+      });
+
+      container.appendChild(btn);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  RENDER HISTORY
+  // ═══════════════════════════════════════════════════════
+
+  function renderHistory() {
+    const sorted = sortEntries(entries);
+
+    if (sorted.length === 0) {
+      historyList.innerHTML = '<div class="empty-state">No entries yet. Log your first migraine above.</div>';
+      return;
+    }
+
+    historyList.innerHTML = sorted.map(entry => {
+      const sevClass = entry.severity ? entry.severity.toLowerCase() : '';
+
+      // Build tag HTML for each category
+      const locTags = (entry.painLocation || []).map(l =>
+        `<span class="tag tag-location">${l}</span>`).join('');
+      const symTags = (entry.symptoms || []).map(s =>
+        `<span class="tag tag-symptom">${s}</span>`).join('');
+      const trigTags = (entry.triggers || []).map(t =>
+        `<span class="tag tag-trigger">${t}</span>`).join('');
+      const medTags = (entry.medications || []).map(m =>
+        `<span class="tag tag-medication">${m}</span>`).join('');
+
+      const allTags = locTags + symTags + trigTags + medTags;
+
+      const auraLine = entry.aura === true
+        ? '<div class="entry-aura">Aura: Yes</div>'
+        : entry.aura === false
+          ? '<div class="entry-aura">Aura: No</div>'
+          : '';
+
+      const notesLine = entry.notes
+        ? `<div class="entry-notes">${escapeHtml(entry.notes)}</div>`
+        : '';
+
+      return `
+        <div class="entry-card">
+          <div class="entry-top-row">
+            <div class="entry-meta">
+              <span class="entry-date">${entry.date}</span>
+              ${entry.severity ? `<span class="severity-badge ${sevClass}">${entry.severity}</span>` : ''}
+              ${entry.duration ? `<span class="entry-duration">${entry.duration}</span>` : ''}
+            </div>
+            <button class="btn btn-danger" onclick="deleteEntry(${entry.id})">Delete</button>
+          </div>
+          ${allTags ? `<div class="tags-row">${allTags}</div>` : ''}
+          ${auraLine}
+          ${notesLine}
+        </div>
+      `;
+    }).join('');
+  }
+
+  /** Escape HTML special characters to prevent XSS */
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  ENTRY ACTIONS
+  // ═══════════════════════════════════════════════════════
+
+  /** Log a new migraine entry */
+  function logEntry() {
+    if (!severity) {
+      showToast('Please select a pain severity level');
+      return;
+    }
+
+    const entry = {
+      id: Date.now(),
+      date: dateInput.value || todayStr(),
+      severity: severity,
+      painLocation: painLocations.slice(),
+      duration: buildDuration(durationHours.value, durationMinutes.value),
+      symptoms: symptoms.slice(),
+      triggers: triggers.slice(),
+      medications: medications.slice(),
+      aura: aura,
+      notes: notesInput.value.trim(),
+    };
+
+    entries.push(entry);
+    saveEntries();
+    renderHistory();
+    resetForm();
+    showToast('Entry logged!');
+  }
+
+  /** Reset the form to defaults */
+  function resetForm() {
+    // Reset state
+    severity = '';
+    painLocations = [];
+    symptoms = [];
+    triggers = [];
+    medications = [];
+    aura = null;
+
+    // Reset date to today
+    dateInput.value = todayStr();
+
+    // Clear duration
+    durationHours.value = '';
+    durationMinutes.value = '';
+
+    // Clear notes
+    notesInput.value = '';
+
+    // Reset all toggle buttons visually
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.classList.remove(
+        'active-default', 'active-mild', 'active-moderate', 'active-severe',
+        'active-trigger', 'active-medication'
+      );
+    });
+  }
+
+  /** Delete an entry by id (with confirmation) */
+  function deleteEntry(id) {
+    if (!confirm('Delete this entry?')) return;
+    entries = entries.filter(e => e.id !== id);
+    saveEntries();
+    renderHistory();
+    showToast('Entry deleted');
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  CSV EXPORT
+  // ═══════════════════════════════════════════════════════
+
+  function exportCSV() {
+    if (entries.length === 0) {
+      showToast('No entries to export');
+      return;
+    }
+
+    const sorted = sortEntries(entries);
+    const header = 'Date,Severity,Pain Location,Duration,Symptoms,Triggers,Medications,Aura,Notes';
+
+    const rows = sorted.map(e => {
+      const loc = csvField((e.painLocation || []).join(', '));
+      const sym = csvField((e.symptoms || []).join(', '));
+      const trig = csvField((e.triggers || []).join(', '));
+      const med = csvField((e.medications || []).join(', '));
+      const auraStr = e.aura === true ? 'Yes' : e.aura === false ? 'No' : '';
+      const notes = csvField(e.notes || '');
+
+      return `${e.date},${e.severity || ''},${loc},${e.duration || ''},${sym},${trig},${med},${auraStr},${notes}`;
+    });
+
+    const csv = header + '\n' + rows.join('\n');
+    downloadFile('migraine_log.csv', csv, 'text/csv');
+    showToast('CSV exported!');
+  }
+
+  /** Wrap a value in quotes for CSV if it contains commas, quotes, or newlines */
+  function csvField(val) {
+    if (!val) return '';
+    // Always quote if it contains comma, quote, or newline
+    if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+      return '"' + val.replace(/"/g, '""') + '"';
+    }
+    return val;
+  }
+
+  /** Trigger a file download in the browser */
+  function downloadFile(filename, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  CSV IMPORT
+  // ═══════════════════════════════════════════════════════
+
+  function importCSV() {
+    csvFileInput.click();
+  }
+
+  csvFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target.result;
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+        if (lines.length < 2) {
+          showToast('CSV file appears to be empty');
+          return;
+        }
+
+        // Skip header row (line 0)
+        let importedCount = 0;
+
+        for (let i = 1; i < lines.length; i++) {
+          const fields = parseCSVLine(lines[i]);
+          if (fields.length < 9) continue;
+
+          const date = fields[0];
+          const sev = fields[1];
+          const locationStr = fields[2];
+          const dur = fields[3];
+          const symptomsStr = fields[4];
+          const triggersStr = fields[5];
+          const medsStr = fields[6];
+          const auraStr = fields[7];
+          const notes = fields[8];
+
+          // Check for duplicate
+          const isDuplicate = entries.some(
+            ex => ex.date === date && ex.severity === sev && (ex.duration || '') === dur
+          );
+          if (isDuplicate) continue;
+
+          const entry = {
+            id: Date.now() + i,
+            date: date,
+            severity: sev,
+            painLocation: parseSplit(locationStr),
+            duration: dur,
+            symptoms: parseSplit(symptomsStr),
+            triggers: parseSplit(triggersStr),
+            medications: parseSplit(medsStr),
+            aura: auraStr === 'Yes' ? true : auraStr === 'No' ? false : null,
+            notes: notes || '',
+          };
+
+          entries.push(entry);
+          importedCount++;
+        }
+
+        saveEntries();
+        renderHistory();
+        showToast(`Imported ${importedCount} new entry${importedCount !== 1 ? 's' : ''}`);
+      } catch (err) {
+        showToast('Could not read the CSV file');
+      }
+    };
+
+    reader.readAsText(file);
+    // Reset so the same file can be re-imported if needed
+    csvFileInput.value = '';
+  });
+
+  /** Parse a single CSV line, handling quoted fields with escaped quotes */
+  function parseCSVLine(line) {
+    const fields = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (i + 1 < line.length && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          current += ch;
+        }
+      } else {
+        if (ch === '"') {
+          inQuotes = true;
+        } else if (ch === ',') {
+          fields.push(current);
+          current = '';
+        } else {
+          current += ch;
+        }
+      }
+    }
+    fields.push(current);
+    return fields;
+  }
+
+  /** Split a comma-separated string into trimmed non-empty values */
+  function parseSplit(str) {
+    return str ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  DOCTOR SUMMARY
+  // ═══════════════════════════════════════════════════════
+
+  function showSummary() {
+    if (entries.length === 0) {
+      showToast('No entries to summarize');
+      return;
+    }
+
+    // Switch screens
+    document.getElementById('trackerScreen').classList.add('hidden');
+    document.getElementById('summaryScreen').classList.add('active');
+
+    const sorted = sortEntries(entries);
+
+    // Date range from recent 7 entries
+    const recentEntries = sorted.slice(0, 7);
+    const dateRange = recentEntries.length > 0
+      ? `${recentEntries[recentEntries.length - 1].date}  to  ${recentEntries[0].date}`
+      : 'No entries';
+
+    document.getElementById('summaryDateRange').textContent = dateRange;
+
+    // Last 30 days stats
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const y = thirtyDaysAgo.getFullYear();
+    const m = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
+    const d = String(thirtyDaysAgo.getDate()).padStart(2, '0');
+    const thirtyDayStr = `${y}-${m}-${d}`;
+
+    const last30 = entries.filter(e => e.date >= thirtyDayStr);
+    const mildCount = last30.filter(e => e.severity === 'Mild').length;
+    const modCount = last30.filter(e => e.severity === 'Moderate').length;
+    const severeCount = last30.filter(e => e.severity === 'Severe').length;
+
+    // Stats row
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-box default">
+        <div class="stat-number">${last30.length}</div>
+        <div class="stat-label">Total (30d)</div>
+      </div>
+      <div class="stat-box mild">
+        <div class="stat-number">${mildCount}</div>
+        <div class="stat-label">Mild</div>
+      </div>
+      <div class="stat-box moderate">
+        <div class="stat-number">${modCount}</div>
+        <div class="stat-label">Moderate</div>
+      </div>
+      <div class="stat-box severe">
+        <div class="stat-number">${severeCount}</div>
+        <div class="stat-label">Severe</div>
+      </div>
+    `;
+
+    // Frequency helper
+    function computeFrequency(field) {
+      const counts = {};
+      entries.forEach(e => {
+        const arr = e[field] || [];
+        arr.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
+      });
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+    }
+
+    // Trigger frequency
+    const trigFreq = computeFrequency('triggers');
+    const trigSection = document.getElementById('triggerFreqSection');
+    if (trigFreq.length > 0) {
+      trigSection.innerHTML = `
+        <div class="freq-title">Most Common Triggers</div>
+        <div class="freq-chips">
+          ${trigFreq.map(([name, count]) =>
+            `<span class="freq-chip trigger">${name} (${count})</span>`
+          ).join('')}
+        </div>
+      `;
+    } else {
+      trigSection.innerHTML = '';
+    }
+
+    // Symptom frequency
+    const symFreq = computeFrequency('symptoms');
+    const symSection = document.getElementById('symptomFreqSection');
+    if (symFreq.length > 0) {
+      symSection.innerHTML = `
+        <div class="freq-title">Most Frequent Symptoms</div>
+        <div class="freq-chips">
+          ${symFreq.map(([name, count]) =>
+            `<span class="freq-chip symptom">${name} (${count})</span>`
+          ).join('')}
+        </div>
+      `;
+    } else {
+      symSection.innerHTML = '';
+    }
+
+    // Recent entries table
+    const tableContainer = document.getElementById('recentTableContainer');
+    if (recentEntries.length > 0) {
+      const rows = recentEntries.map(e => {
+        const sevClass = e.severity ? e.severity.toLowerCase() : '';
+        const keySym = (e.symptoms || []).slice(0, 3).join(', ');
+        return `
+          <tr>
+            <td>${shortDate(e.date)}</td>
+            <td>${e.severity ? `<span class="mini-badge ${sevClass}">${e.severity}</span>` : ''}</td>
+            <td>${e.duration || '—'}</td>
+            <td>${keySym || '—'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tableContainer.innerHTML = `
+        <table class="recent-table">
+          <thead>
+            <tr><th>Date</th><th>Severity</th><th>Duration</th><th>Key Symptoms</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    } else {
+      tableContainer.innerHTML = '';
+    }
+
+    // Latest note
+    const noteContainer = document.getElementById('latestNoteContainer');
+    const latestWithNote = sorted.find(e => e.notes && e.notes.trim());
+    if (latestWithNote) {
+      noteContainer.innerHTML = `
+        <div class="latest-note-section">
+          <div class="latest-note-label">Latest Note</div>
+          <div class="latest-note-text">${escapeHtml(latestWithNote.notes)}</div>
+        </div>
+      `;
+    } else {
+      noteContainer.innerHTML = '';
+    }
+
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+
+  function hideSummary() {
+    document.getElementById('summaryScreen').classList.remove('active');
+    document.getElementById('trackerScreen').classList.remove('hidden');
+    window.scrollTo(0, 0);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  EVENT LISTENERS
+  // ═══════════════════════════════════════════════════════
+
+  // Log Entry button
+  document.getElementById('logEntryBtn').addEventListener('click', logEntry);
+
+  // History toggle
+  document.getElementById('historyToggle').addEventListener('click', () => {
+    historyOpen = !historyOpen;
+    historyContent.style.display = historyOpen ? 'block' : 'none';
+    chevron.classList.toggle('open', historyOpen);
+    if (historyOpen) renderHistory();
+  });
+
+  // Export / Import / Summary
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('importBtn').addEventListener('click', importCSV);
+  document.getElementById('summaryBtn').addEventListener('click', showSummary);
+  document.getElementById('summaryBackBtn').addEventListener('click', hideSummary);
+
+  // ═══════════════════════════════════════════════════════
+  //  INITIALIZATION
+  // ═══════════════════════════════════════════════════════
+
+  (function init() {
+    // Set today's date
+    dateInput.value = todayStr();
+
+    // Build toggle grids
+    buildSeverityGrid();
+
+    buildToggleGrid('locationGrid', PAIN_LOCATIONS, 'multi', 'active-default', (vals) => {
+      painLocations = vals;
+    });
+
+    buildToggleGrid('symptomsGrid', SYMPTOMS, 'multi', 'active-default', (vals) => {
+      symptoms = vals;
+    });
+
+    buildToggleGrid('triggersGrid', TRIGGERS, 'multi', 'active-trigger', (vals) => {
+      triggers = vals;
+    });
+
+    buildToggleGrid('medicationsGrid', MEDICATIONS, 'multi', 'active-medication', (vals) => {
+      medications = vals;
+    });
+
+    buildAuraGrid();
+
+    // Load saved entries
+    loadEntries();
+  })();
+</script>
+</body>
+</html>

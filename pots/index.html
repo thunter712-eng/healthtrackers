@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="POTS Tracker">
+  <title>POTS Tracker</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #edf7f7;
+      color: #4a5568;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+      min-height: 100vh;
+    }
+
+    /* ── App Container ────────────────────────────────── */
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+      padding-top: env(safe-area-inset-top, 16px);
+      padding-bottom: 32px;
+    }
+
+    /* ── Header ───────────────────────────────────────── */
+    .app-header {
+      text-align: center;
+      padding: 20px 0 12px;
+    }
+
+    .app-header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #0d9488;
+      margin-bottom: 2px;
+    }
+
+    .app-header .subtitle {
+      font-size: 13px;
+      color: #a0aec0;
+    }
+
+    /* ── Cards ─────────────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0d9488;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .section-hint {
+      font-size: 12px;
+      color: #a0aec0;
+      margin-top: -6px;
+      margin-bottom: 10px;
+    }
+
+    /* ── Date Input ────────────────────────────────────── */
+    .date-input, .time-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 10px;
+      font-size: 16px;
+      color: #1a202c;
+      background: #fff;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .date-input:focus, .time-input:focus {
+      outline: none;
+      border-color: #14b8a6;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    }
+
+    .datetime-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .datetime-row > * {
+      flex: 1;
+    }
+
+    /* ── Vital Signs Inputs ────────────────────────────── */
+    .vitals-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .vitals-group {
+      text-align: center;
+    }
+
+    .vitals-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #718096;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .vitals-input {
+      width: 100%;
+      padding: 10px 6px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a202c;
+      text-align: center;
+      background: #fff;
+      -webkit-appearance: none;
+    }
+
+    .vitals-input:focus {
+      outline: none;
+      border-color: #14b8a6;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    }
+
+    .vitals-input.hr-input:focus {
+      border-color: #e53e3e;
+      box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15);
+    }
+
+    .vitals-unit {
+      font-size: 11px;
+      color: #a0aec0;
+      margin-top: 2px;
+    }
+
+    .hr-delta {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      min-height: 22px;
+    }
+
+    .hr-delta.normal { color: #38a169; }
+    .hr-delta.elevated { color: #d69e2e; }
+    .hr-delta.diagnostic { color: #e53e3e; }
+
+    /* ── Toggle Grid ──────────────────────────────────── */
+    .toggle-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .toggle-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 8px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      color: #4a5568;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 44px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .toggle-btn:active {
+      opacity: 0.7;
+    }
+
+    /* Active states for different toggle categories */
+    .toggle-btn.active-default {
+      background: #e6fffa;
+      border-color: #14b8a6;
+      color: #0d9488;
+    }
+
+    .toggle-btn.active-symptom {
+      background: #fef2f2;
+      border-color: #f87171;
+      color: #dc2626;
+    }
+
+    .toggle-btn.active-trigger {
+      background: #fef3c7;
+      border-color: #d97706;
+      color: #92400e;
+    }
+
+    .toggle-btn.active-medication {
+      background: #e0f2fe;
+      border-color: #0284c7;
+      color: #0369a1;
+    }
+
+    .toggle-btn.active-management {
+      background: #f0fdf4;
+      border-color: #22c55e;
+      color: #15803d;
+    }
+
+    /* Severity buttons */
+    .severity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .toggle-btn.active-mild {
+      background: #c6f6d5;
+      border-color: #48bb78;
+      color: #276749;
+    }
+
+    .toggle-btn.active-moderate {
+      background: #fefcbf;
+      border-color: #ecc94b;
+      color: #975a16;
+    }
+
+    .toggle-btn.active-severe {
+      background: #fed7d7;
+      border-color: #fc8181;
+      color: #c53030;
+    }
+
+    /* ── Intake Inputs ─────────────────────────────────── */
+    .intake-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .intake-input {
+      width: 70px;
+      padding: 10px 12px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 10px;
+      font-size: 16px;
+      color: #1a202c;
+      text-align: center;
+      background: #fff;
+      -webkit-appearance: none;
+    }
+
+    .intake-input:focus {
+      outline: none;
+      border-color: #14b8a6;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    }
+
+    .intake-label {
+      font-size: 14px;
+      color: #718096;
+    }
+
+    /* ── Notes Textarea ───────────────────────────────── */
+    .notes-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 10px;
+      font-size: 15px;
+      color: #1a202c;
+      background: #fff;
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+      -webkit-appearance: none;
+    }
+
+    .notes-textarea:focus {
+      outline: none;
+      border-color: #14b8a6;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    }
+
+    .notes-textarea::placeholder {
+      color: #a0aec0;
+    }
+
+    /* ── Buttons ───────────────────────────────────────── */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s ease;
+      min-height: 48px;
+    }
+
+    .btn:active { opacity: 0.7; }
+
+    .btn-primary { background: #14b8a6; color: #fff; }
+    .btn-success { background: #48bb78; color: #fff; }
+    .btn-secondary { background: #edf2f7; color: #4a5568; }
+    .btn-danger {
+      background: #fc8181;
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 13px;
+      width: auto;
+      min-height: 36px;
+      border-radius: 8px;
+    }
+    .btn-summary { background: #0d9488; color: #fff; }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn-row .btn { flex: 1; }
+
+    /* ── History Section ───────────────────────────────── */
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      padding: 4px 0;
+    }
+
+    .history-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .chevron {
+      font-size: 18px;
+      color: #a0aec0;
+      transition: transform 0.2s ease;
+    }
+
+    .chevron.open { transform: rotate(180deg); }
+
+    .history-list { margin-top: 12px; }
+
+    /* ── Entry Card (in history) ──────────────────────── */
+    .entry-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .entry-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .entry-date {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .entry-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .severity-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .severity-badge.mild { background: #c6f6d5; color: #276749; }
+    .severity-badge.moderate { background: #fefcbf; color: #975a16; }
+    .severity-badge.severe { background: #fed7d7; color: #c53030; }
+
+    .entry-hr {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e53e3e;
+    }
+
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tag-symptom { background: #fef2f2; color: #dc2626; }
+    .tag-trigger { background: #fef3c7; color: #92400e; }
+    .tag-medication { background: #e0f2fe; color: #0369a1; }
+    .tag-management { background: #f0fdf4; color: #15803d; }
+    .tag-vitals { background: #e6fffa; color: #0d9488; }
+
+    .entry-notes {
+      font-size: 13px;
+      color: #718096;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* ── Toast Notification ────────────────────────────── */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: #2d3748;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Doctor Summary Screen ─────────────────────────── */
+    .summary-screen { display: none; }
+    .summary-screen.active { display: block; }
+    .tracker-screen.hidden { display: none; }
+
+    .summary-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: #0d9488;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 0;
+      -webkit-tap-highlight-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .summary-title {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .summary-title h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0d9488;
+    }
+
+    .summary-date-range {
+      text-align: center;
+      font-size: 13px;
+      color: #718096;
+      margin-bottom: 16px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .stat-box.default { background: #e6fffa; }
+    .stat-box.mild { background: #c6f6d5; }
+    .stat-box.moderate { background: #fefcbf; }
+    .stat-box.severe { background: #fed7d7; }
+
+    .stat-number { font-size: 24px; font-weight: 700; }
+
+    .stat-box.default .stat-number { color: #0d9488; }
+    .stat-box.mild .stat-number { color: #276749; }
+    .stat-box.moderate .stat-number { color: #975a16; }
+    .stat-box.severe .stat-number { color: #c53030; }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 2px;
+    }
+
+    .stat-box.default .stat-label { color: #0d9488; }
+    .stat-box.mild .stat-label { color: #276749; }
+    .stat-box.moderate .stat-label { color: #975a16; }
+    .stat-box.severe .stat-label { color: #c53030; }
+
+    .freq-section { margin-bottom: 18px; }
+
+    .freq-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+
+    .freq-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .freq-chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .freq-chip.trigger { background: #fef3c7; color: #92400e; }
+    .freq-chip.symptom { background: #fef2f2; color: #dc2626; }
+
+    .recent-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+
+    .recent-table th {
+      font-size: 11px;
+      font-weight: 600;
+      color: #718096;
+      text-align: left;
+      padding: 6px 4px;
+      border-bottom: 1px solid #e2e8f0;
+      text-transform: uppercase;
+    }
+
+    .recent-table td {
+      font-size: 13px;
+      color: #4a5568;
+      padding: 8px 4px;
+      border-bottom: 1px solid #f7fafc;
+      vertical-align: top;
+    }
+
+    .mini-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .mini-badge.mild { background: #c6f6d5; color: #276749; }
+    .mini-badge.moderate { background: #fefcbf; color: #975a16; }
+    .mini-badge.severe { background: #fed7d7; color: #c53030; }
+
+    .hr-summary-box {
+      background: #fff5f5;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .hr-summary-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #718096;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .hr-summary-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #e53e3e;
+    }
+
+    .hr-summary-detail {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 4px;
+    }
+
+    /* ── Utility ───────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      color: #a0aec0;
+      font-size: 14px;
+      padding: 24px 0;
+    }
+
+    .hidden-file-input { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden file input for CSV import -->
+<input type="file" accept=".csv" class="hidden-file-input" id="csvFileInput">
+
+<!-- ═══ Tracker Screen ═══════════════════════════════ -->
+<div class="app-container tracker-screen" id="trackerScreen">
+
+  <div class="app-header">
+    <h1>POTS Tracker</h1>
+    <div class="subtitle">Track &middot; Understand &middot; Manage</div>
+  </div>
+
+  <!-- Date & Time -->
+  <div class="card">
+    <div class="section-label">Date & Time</div>
+    <div class="datetime-row">
+      <input type="date" class="date-input" id="dateInput">
+      <input type="time" class="time-input" id="timeInput">
+    </div>
+  </div>
+
+  <!-- Overall Severity -->
+  <div class="card">
+    <div class="section-label">Overall Severity</div>
+    <div class="section-hint">How bad is this episode overall?</div>
+    <div class="severity-grid" id="severityGrid"></div>
+  </div>
+
+  <!-- Heart Rate -->
+  <div class="card">
+    <div class="section-label">Heart Rate</div>
+    <div class="section-hint">Record in each position (BPM)</div>
+    <div class="vitals-grid">
+      <div class="vitals-group">
+        <div class="vitals-label">Lying</div>
+        <input type="number" class="vitals-input hr-input" id="hrLying" min="30" max="250" placeholder="--">
+        <div class="vitals-unit">BPM</div>
+      </div>
+      <div class="vitals-group">
+        <div class="vitals-label">Sitting</div>
+        <input type="number" class="vitals-input hr-input" id="hrSitting" min="30" max="250" placeholder="--">
+        <div class="vitals-unit">BPM</div>
+      </div>
+      <div class="vitals-group">
+        <div class="vitals-label">Standing</div>
+        <input type="number" class="vitals-input hr-input" id="hrStanding" min="30" max="250" placeholder="--">
+        <div class="vitals-unit">BPM</div>
+      </div>
+    </div>
+    <div class="hr-delta" id="hrDelta"></div>
+  </div>
+
+  <!-- Symptoms -->
+  <div class="card">
+    <div class="section-label">Symptoms</div>
+    <div class="toggle-grid" id="symptomsGrid"></div>
+  </div>
+
+  <!-- Triggers -->
+  <div class="card">
+    <div class="section-label">Triggers</div>
+    <div class="toggle-grid" id="triggersGrid"></div>
+  </div>
+
+  <!-- Fluids & Salt -->
+  <div class="card">
+    <div class="section-label">Fluids & Sodium</div>
+    <div class="intake-row" style="margin-bottom: 10px;">
+      <input type="number" class="intake-input" id="fluidOz" min="0" max="300" placeholder="0">
+      <span class="intake-label">oz of fluids today</span>
+    </div>
+    <div class="section-label" style="margin-top: 8px;">Salt Intake</div>
+    <div class="toggle-grid-3" id="saltGrid"></div>
+  </div>
+
+  <!-- Medications & Management -->
+  <div class="card">
+    <div class="section-label">Medications</div>
+    <div class="toggle-grid" id="medicationsGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Management Strategies</div>
+    <div class="toggle-grid" id="managementGrid"></div>
+  </div>
+
+  <!-- Position/Activity when symptoms hit -->
+  <div class="card">
+    <div class="section-label">Position When Symptoms Started</div>
+    <div class="toggle-grid" id="positionGrid"></div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="section-label">Notes</div>
+    <textarea class="notes-textarea" id="notesInput" placeholder="Optional notes about this episode..." rows="3"></textarea>
+  </div>
+
+  <!-- Log Entry Button -->
+  <button class="btn btn-primary" id="logEntryBtn">Log Entry</button>
+
+  <!-- History Section -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="history-header" id="historyToggle">
+      <h2>History</h2>
+      <span class="chevron" id="chevron">&#9660;</span>
+    </div>
+
+    <div id="historyContent" style="display: none;">
+      <div class="btn-row" style="margin-top: 12px;">
+        <button class="btn btn-success" id="exportBtn">Export CSV</button>
+        <button class="btn btn-secondary" id="importBtn">Import CSV</button>
+      </div>
+      <button class="btn btn-summary" id="summaryBtn" style="margin-bottom: 12px;">Doctor Summary</button>
+
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ Doctor Summary Screen ════════════════════════ -->
+<div class="app-container summary-screen" id="summaryScreen">
+
+  <button class="summary-back-btn" id="summaryBackBtn">&larr; Back to Tracker</button>
+
+  <div class="card">
+    <div class="summary-title">
+      <h2>POTS Log</h2>
+    </div>
+    <div class="summary-date-range" id="summaryDateRange"></div>
+
+    <!-- HR Summary -->
+    <div class="hr-summary-box" id="hrSummaryBox"></div>
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="statsRow"></div>
+
+    <!-- Trigger Frequency -->
+    <div class="freq-section" id="triggerFreqSection"></div>
+
+    <!-- Symptom Frequency -->
+    <div class="freq-section" id="symptomFreqSection"></div>
+
+    <!-- Recent Entries Table -->
+    <div id="recentTableContainer"></div>
+
+    <!-- Latest Note -->
+    <div id="latestNoteContainer"></div>
+  </div>
+
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════
+  //  CONSTANTS
+  // ═══════════════════════════════════════════════════════
+
+  const STORAGE_KEY = 'pots_tracker_entries';
+
+  const SEVERITY_LEVELS = ['Mild', 'Moderate', 'Severe'];
+
+  const SYMPTOMS = [
+    'Dizziness', 'Lightheadedness', 'Palpitations', 'Brain Fog',
+    'Fatigue', 'Presyncope', 'Syncope (Fainted)', 'Blurred Vision',
+    'Nausea', 'Headache', 'Tremor/Shaking', 'Chest Pain',
+    'Shortness of Breath', 'Sweating', 'Weakness', 'Anxiety',
+    'Exercise Intolerance', 'GI Issues',
+  ];
+
+  const TRIGGERS = [
+    'Standing Up Quickly', 'Prolonged Standing', 'Hot Weather',
+    'Hot Shower/Bath', 'Large Meal', 'Dehydration',
+    'Morning/After Waking', 'Exercise', 'Stress',
+    'Menstrual Cycle', 'Poor Sleep', 'Alcohol',
+    'Skipped Meal', 'Caffeine',
+  ];
+
+  const MEDICATIONS = [
+    'Fludrocortisone', 'Midodrine', 'Propranolol',
+    'Metoprolol', 'Ivabradine', 'Pyridostigmine',
+    'Electrolyte Supplement', 'Salt Tablets',
+    'Other Prescription',
+  ];
+
+  const MANAGEMENT = [
+    'Compression Garments', 'Counter-Maneuvers',
+    'Elevated Head (Sleep)', 'Small Frequent Meals',
+    'Exercise Program', 'Cooling Vest',
+  ];
+
+  const POSITIONS = [
+    'Stood Up', 'Standing Still',
+    'Walking', 'Sitting',
+    'After Exercise', 'Lying Down',
+  ];
+
+  const SALT_LEVELS = ['Low', 'Normal', 'High'];
+
+  // ═══════════════════════════════════════════════════════
+  //  STATE
+  // ═══════════════════════════════════════════════════════
+
+  let entries = [];
+  let severity = '';
+  let symptoms = [];
+  let triggers = [];
+  let medications = [];
+  let management = [];
+  let position = '';
+  let saltLevel = '';
+  let historyOpen = false;
+
+  // ═══════════════════════════════════════════════════════
+  //  DOM REFERENCES
+  // ═══════════════════════════════════════════════════════
+
+  const dateInput = document.getElementById('dateInput');
+  const timeInput = document.getElementById('timeInput');
+  const hrLying = document.getElementById('hrLying');
+  const hrSitting = document.getElementById('hrSitting');
+  const hrStanding = document.getElementById('hrStanding');
+  const hrDelta = document.getElementById('hrDelta');
+  const fluidOz = document.getElementById('fluidOz');
+  const notesInput = document.getElementById('notesInput');
+  const historyList = document.getElementById('historyList');
+  const historyContent = document.getElementById('historyContent');
+  const chevron = document.getElementById('chevron');
+  const csvFileInput = document.getElementById('csvFileInput');
+
+  // ═══════════════════════════════════════════════════════
+  //  HELPER FUNCTIONS
+  // ═══════════════════════════════════════════════════════
+
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function nowTimeStr() {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function shortDate(iso) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const parts = iso.split('-');
+    if (parts.length < 3) return iso;
+    return `${months[parseInt(parts[1],10)-1]} ${parseInt(parts[2],10)}`;
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  function sortEntries(arr) {
+    return arr.slice().sort((a, b) => {
+      const cmp = b.date.localeCompare(a.date);
+      if (cmp !== 0) return cmp;
+      return b.id - a.id;
+    });
+  }
+
+  /** Calculate HR delta (standing minus lowest of lying/sitting) */
+  function calcHrDelta() {
+    const lying = parseInt(hrLying.value, 10);
+    const sitting = parseInt(hrSitting.value, 10);
+    const standing = parseInt(hrStanding.value, 10);
+
+    if (!standing || (!lying && !sitting)) {
+      hrDelta.textContent = '';
+      hrDelta.className = 'hr-delta';
+      return;
+    }
+
+    // Use the lowest resting HR as baseline
+    let baseline;
+    if (lying && sitting) baseline = Math.min(lying, sitting);
+    else baseline = lying || sitting;
+
+    const delta = standing - baseline;
+    hrDelta.textContent = `+${delta} BPM on standing`;
+
+    if (delta >= 30) {
+      hrDelta.className = 'hr-delta diagnostic';
+      hrDelta.textContent += ' (meets POTS criteria)';
+    } else if (delta >= 20) {
+      hrDelta.className = 'hr-delta elevated';
+      hrDelta.textContent += ' (elevated)';
+    } else {
+      hrDelta.className = 'hr-delta normal';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  LOCAL STORAGE
+  // ═══════════════════════════════════════════════════════
+
+  function loadEntries() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      entries = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      entries = [];
+    }
+  }
+
+  function saveEntries() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  BUILD TOGGLE GRIDS
+  // ═══════════════════════════════════════════════════════
+
+  function buildToggleGrid(containerId, items, mode, activeClass, onUpdate) {
+    const container = document.getElementById(containerId);
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toggle-btn';
+      btn.textContent = item;
+      btn.dataset.value = item;
+
+      btn.addEventListener('click', () => {
+        if (mode === 'single') {
+          container.querySelectorAll('.toggle-btn').forEach(b => {
+            b.classList.remove(activeClass, 'active-mild', 'active-moderate', 'active-severe');
+          });
+          btn.classList.add(activeClass);
+          onUpdate(item);
+        } else {
+          btn.classList.toggle(activeClass);
+          onUpdate(getActiveValues(containerId, activeClass));
+        }
+      });
+
+      container.appendChild(btn);
+    });
+  }
+
+  function getActiveValues(containerId, activeClass) {
+    const btns = document.getElementById(containerId).querySelectorAll('.' + activeClass);
+    return Array.from(btns).map(b => b.dataset.value);
+  }
+
+  function buildSeverityGrid() {
+    const container = document.getElementById('severityGrid');
+    const colorMap = { 'Mild': 'active-mild', 'Moderate': 'active-moderate', 'Severe': 'active-severe' };
+
+    SEVERITY_LEVELS.forEach(level => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toggle-btn';
+      btn.textContent = level;
+      btn.dataset.value = level;
+
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('.toggle-btn').forEach(b => {
+          b.classList.remove('active-mild', 'active-moderate', 'active-severe');
+        });
+        btn.classList.add(colorMap[level]);
+        severity = level;
+      });
+
+      container.appendChild(btn);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  RENDER HISTORY
+  // ═══════════════════════════════════════════════════════
+
+  function renderHistory() {
+    const sorted = sortEntries(entries);
+    if (sorted.length === 0) {
+      historyList.innerHTML = '<div class="empty-state">No entries yet. Log your first episode above.</div>';
+      return;
+    }
+
+    historyList.innerHTML = sorted.map(e => {
+      let tagsHtml = '';
+
+      // HR vitals tag
+      if (e.hrStanding) {
+        let delta = '';
+        const baseline = e.hrLying && e.hrSitting ? Math.min(e.hrLying, e.hrSitting) : (e.hrLying || e.hrSitting || 0);
+        if (baseline) delta = ` (+${e.hrStanding - baseline})`;
+        tagsHtml += `<span class="tag tag-vitals">HR: ${e.hrStanding}${delta}</span>`;
+      }
+
+      if (e.symptoms && e.symptoms.length) {
+        tagsHtml += e.symptoms.map(s => `<span class="tag tag-symptom">${s}</span>`).join('');
+      }
+      if (e.triggers && e.triggers.length) {
+        tagsHtml += e.triggers.map(t => `<span class="tag tag-trigger">${t}</span>`).join('');
+      }
+      if (e.medications && e.medications.length) {
+        tagsHtml += e.medications.map(m => `<span class="tag tag-medication">${m}</span>`).join('');
+      }
+      if (e.management && e.management.length) {
+        tagsHtml += e.management.map(m => `<span class="tag tag-management">${m}</span>`).join('');
+      }
+
+      const sevBadge = e.severity
+        ? `<span class="severity-badge ${e.severity.toLowerCase()}">${e.severity}</span>`
+        : '';
+
+      const timeStr = e.time ? ` at ${e.time}` : '';
+      const fluidStr = e.fluidOz ? `<span class="tag tag-vitals">${e.fluidOz} oz fluids</span>` : '';
+      const saltStr = e.saltLevel ? `<span class="tag tag-vitals">Salt: ${e.saltLevel}</span>` : '';
+      const posStr = e.position ? `<span class="tag tag-vitals">${e.position}</span>` : '';
+
+      const notesHtml = e.notes ? `<div class="entry-notes">"${e.notes}"</div>` : '';
+
+      return `
+        <div class="entry-card">
+          <div class="entry-top-row">
+            <span class="entry-date">${shortDate(e.date)}${timeStr}</span>
+            <div class="entry-meta">
+              ${sevBadge}
+              <button class="btn btn-danger" onclick="deleteEntry(${e.id})">Delete</button>
+            </div>
+          </div>
+          <div class="tags-row">${tagsHtml}${fluidStr}${saltStr}${posStr}</div>
+          ${notesHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  LOG / DELETE ENTRIES
+  // ═══════════════════════════════════════════════════════
+
+  function logEntry() {
+    const entry = {
+      id: Date.now(),
+      date: dateInput.value || todayStr(),
+      time: timeInput.value || '',
+      severity: severity,
+      hrLying: parseInt(hrLying.value, 10) || null,
+      hrSitting: parseInt(hrSitting.value, 10) || null,
+      hrStanding: parseInt(hrStanding.value, 10) || null,
+      symptoms: [...symptoms],
+      triggers: [...triggers],
+      medications: [...medications],
+      management: [...management],
+      position: position,
+      fluidOz: parseInt(fluidOz.value, 10) || null,
+      saltLevel: saltLevel,
+      notes: notesInput.value.trim(),
+    };
+
+    entries.push(entry);
+    saveEntries();
+    renderHistory();
+    resetForm();
+    showToast('Entry logged!');
+  }
+
+  function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    saveEntries();
+    renderHistory();
+    showToast('Entry deleted');
+  }
+
+  function resetForm() {
+    dateInput.value = todayStr();
+    timeInput.value = nowTimeStr();
+    severity = '';
+    symptoms = [];
+    triggers = [];
+    medications = [];
+    management = [];
+    position = '';
+    saltLevel = '';
+
+    hrLying.value = '';
+    hrSitting.value = '';
+    hrStanding.value = '';
+    hrDelta.textContent = '';
+    hrDelta.className = 'hr-delta';
+    fluidOz.value = '';
+    notesInput.value = '';
+
+    // Clear all toggle buttons
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.classList.remove(
+        'active-default', 'active-symptom', 'active-trigger',
+        'active-medication', 'active-management',
+        'active-mild', 'active-moderate', 'active-severe'
+      );
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  CSV EXPORT / IMPORT
+  // ═══════════════════════════════════════════════════════
+
+  function exportCSV() {
+    if (entries.length === 0) {
+      showToast('No entries to export');
+      return;
+    }
+    const sorted = sortEntries(entries);
+    const headers = [
+      'Date', 'Time', 'Severity',
+      'HR Lying', 'HR Sitting', 'HR Standing', 'HR Delta',
+      'Symptoms', 'Triggers', 'Medications', 'Management',
+      'Position', 'Fluids (oz)', 'Salt Intake', 'Notes'
+    ];
+
+    const rows = sorted.map(e => {
+      const baseline = e.hrLying && e.hrSitting ? Math.min(e.hrLying, e.hrSitting) : (e.hrLying || e.hrSitting || 0);
+      const delta = e.hrStanding && baseline ? e.hrStanding - baseline : '';
+      return [
+        e.date, e.time || '', e.severity || '',
+        e.hrLying || '', e.hrSitting || '', e.hrStanding || '', delta,
+        (e.symptoms || []).join('; '),
+        (e.triggers || []).join('; '),
+        (e.medications || []).join('; '),
+        (e.management || []).join('; '),
+        e.position || '', e.fluidOz || '', e.saltLevel || '',
+        (e.notes || '').replace(/"/g, '""')
+      ];
+    });
+
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+      csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pots_log_${todayStr()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV exported!');
+  }
+
+  function importCSV(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const lines = e.target.result.split('\n').filter(l => l.trim());
+        if (lines.length < 2) throw new Error('Empty CSV');
+
+        let imported = 0;
+        for (let i = 1; i < lines.length; i++) {
+          const cells = parseCSVLine(lines[i]);
+          if (cells.length < 10) continue;
+
+          const entry = {
+            id: Date.now() + i,
+            date: cells[0] || todayStr(),
+            time: cells[1] || '',
+            severity: cells[2] || '',
+            hrLying: parseInt(cells[3], 10) || null,
+            hrSitting: parseInt(cells[4], 10) || null,
+            hrStanding: parseInt(cells[5], 10) || null,
+            symptoms: cells[7] ? cells[7].split('; ').filter(Boolean) : [],
+            triggers: cells[8] ? cells[8].split('; ').filter(Boolean) : [],
+            medications: cells[9] ? cells[9].split('; ').filter(Boolean) : [],
+            management: cells[10] ? cells[10].split('; ').filter(Boolean) : [],
+            position: cells[11] || '',
+            fluidOz: parseInt(cells[12], 10) || null,
+            saltLevel: cells[13] || '',
+            notes: cells[14] || '',
+          };
+
+          entries.push(entry);
+          imported++;
+        }
+
+        saveEntries();
+        renderHistory();
+        showToast(`Imported ${imported} entries!`);
+      } catch (err) {
+        showToast('Import failed: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /** Parse a CSV line handling quoted fields */
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"' && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else if (ch === '"') {
+          inQuotes = false;
+        } else {
+          current += ch;
+        }
+      } else {
+        if (ch === '"') {
+          inQuotes = true;
+        } else if (ch === ',') {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += ch;
+        }
+      }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  DOCTOR SUMMARY
+  // ═══════════════════════════════════════════════════════
+
+  function showSummary() {
+    if (entries.length === 0) {
+      showToast('No entries to summarize');
+      return;
+    }
+
+    const sorted = sortEntries(entries);
+    const newest = sorted[0].date;
+    const oldest = sorted[sorted.length - 1].date;
+
+    document.getElementById('summaryDateRange').textContent =
+      `${shortDate(oldest)} – ${shortDate(newest)} (${sorted.length} entries)`;
+
+    // Severity counts
+    const total = sorted.length;
+    const mild = sorted.filter(e => e.severity === 'Mild').length;
+    const moderate = sorted.filter(e => e.severity === 'Moderate').length;
+    const sev = sorted.filter(e => e.severity === 'Severe').length;
+
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-box default"><div class="stat-number">${total}</div><div class="stat-label">Total</div></div>
+      <div class="stat-box mild"><div class="stat-number">${mild}</div><div class="stat-label">Mild</div></div>
+      <div class="stat-box moderate"><div class="stat-number">${moderate}</div><div class="stat-label">Moderate</div></div>
+      <div class="stat-box severe"><div class="stat-number">${sev}</div><div class="stat-label">Severe</div></div>
+    `;
+
+    // HR Summary — average standing HR delta
+    const hrEntries = sorted.filter(e => e.hrStanding && (e.hrLying || e.hrSitting));
+    let hrHtml = '';
+    if (hrEntries.length > 0) {
+      const deltas = hrEntries.map(e => {
+        const base = e.hrLying && e.hrSitting ? Math.min(e.hrLying, e.hrSitting) : (e.hrLying || e.hrSitting);
+        return e.hrStanding - base;
+      });
+      const avgDelta = Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length);
+      const maxDelta = Math.max(...deltas);
+      const avgStanding = Math.round(hrEntries.reduce((a, e) => a + e.hrStanding, 0) / hrEntries.length);
+
+      hrHtml = `
+        <div class="hr-summary-title">Average HR Change on Standing</div>
+        <div class="hr-summary-value">+${avgDelta} BPM</div>
+        <div class="hr-summary-detail">Avg standing HR: ${avgStanding} BPM &middot; Max delta: +${maxDelta} BPM &middot; ${hrEntries.length} readings</div>
+      `;
+    } else {
+      hrHtml = `<div class="hr-summary-title">No heart rate data recorded yet</div>`;
+    }
+    document.getElementById('hrSummaryBox').innerHTML = hrHtml;
+
+    // Trigger frequency
+    const triggerCounts = {};
+    sorted.forEach(e => (e.triggers || []).forEach(t => { triggerCounts[t] = (triggerCounts[t] || 0) + 1; }));
+    const triggerSection = document.getElementById('triggerFreqSection');
+    const sortedTriggers = Object.entries(triggerCounts).sort((a, b) => b[1] - a[1]);
+    if (sortedTriggers.length) {
+      triggerSection.innerHTML = `
+        <div class="freq-title">Top Triggers</div>
+        <div class="freq-chips">
+          ${sortedTriggers.map(([name, count]) =>
+            `<span class="freq-chip trigger">${name} (${count})</span>`
+          ).join('')}
+        </div>
+      `;
+    } else {
+      triggerSection.innerHTML = '';
+    }
+
+    // Symptom frequency
+    const symptomCounts = {};
+    sorted.forEach(e => (e.symptoms || []).forEach(s => { symptomCounts[s] = (symptomCounts[s] || 0) + 1; }));
+    const symptomSection = document.getElementById('symptomFreqSection');
+    const sortedSymptoms = Object.entries(symptomCounts).sort((a, b) => b[1] - a[1]);
+    if (sortedSymptoms.length) {
+      symptomSection.innerHTML = `
+        <div class="freq-title">Top Symptoms</div>
+        <div class="freq-chips">
+          ${sortedSymptoms.map(([name, count]) =>
+            `<span class="freq-chip symptom">${name} (${count})</span>`
+          ).join('')}
+        </div>
+      `;
+    } else {
+      symptomSection.innerHTML = '';
+    }
+
+    // Recent entries table
+    const recent = sorted.slice(0, 10);
+    const tableContainer = document.getElementById('recentTableContainer');
+    tableContainer.innerHTML = `
+      <div class="freq-title" style="margin-top: 4px;">Recent Entries</div>
+      <table class="recent-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Severity</th>
+            <th>HR Delta</th>
+            <th>Top Symptom</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${recent.map(e => {
+            const sClass = e.severity ? e.severity.toLowerCase() : '';
+            const sevHtml = e.severity ? `<span class="mini-badge ${sClass}">${e.severity}</span>` : '—';
+
+            let deltaStr = '—';
+            if (e.hrStanding && (e.hrLying || e.hrSitting)) {
+              const base = e.hrLying && e.hrSitting ? Math.min(e.hrLying, e.hrSitting) : (e.hrLying || e.hrSitting);
+              deltaStr = `+${e.hrStanding - base}`;
+            }
+
+            const topSymptom = (e.symptoms && e.symptoms.length) ? e.symptoms[0] : '—';
+            return `
+              <tr>
+                <td>${shortDate(e.date)}</td>
+                <td>${sevHtml}</td>
+                <td>${deltaStr}</td>
+                <td>${topSymptom}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    // Latest note
+    const latestWithNote = sorted.find(e => e.notes);
+    const noteContainer = document.getElementById('latestNoteContainer');
+    if (latestWithNote) {
+      noteContainer.innerHTML = `
+        <div class="latest-note-section">
+          <div class="freq-title">Latest Note (${shortDate(latestWithNote.date)})</div>
+          <div style="font-size: 14px; color: #4a5568; font-style: italic; line-height: 1.5;">"${latestWithNote.notes}"</div>
+        </div>
+      `;
+    } else {
+      noteContainer.innerHTML = '';
+    }
+
+    // Switch screens
+    document.getElementById('trackerScreen').classList.add('hidden');
+    document.getElementById('summaryScreen').classList.add('active');
+  }
+
+  function hideSummary() {
+    document.getElementById('trackerScreen').classList.remove('hidden');
+    document.getElementById('summaryScreen').classList.remove('active');
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  INITIALIZATION
+  // ═══════════════════════════════════════════════════════
+
+  // Set default date and time
+  dateInput.value = todayStr();
+  timeInput.value = nowTimeStr();
+
+  // Load saved entries
+  loadEntries();
+
+  // Build all toggle grids
+  buildSeverityGrid();
+  buildToggleGrid('symptomsGrid', SYMPTOMS, 'multi', 'active-symptom', v => { symptoms = v; });
+  buildToggleGrid('triggersGrid', TRIGGERS, 'multi', 'active-trigger', v => { triggers = v; });
+  buildToggleGrid('medicationsGrid', MEDICATIONS, 'multi', 'active-medication', v => { medications = v; });
+  buildToggleGrid('managementGrid', MANAGEMENT, 'multi', 'active-management', v => { management = v; });
+  buildToggleGrid('positionGrid', POSITIONS, 'single', 'active-default', v => { position = v; });
+  buildToggleGrid('saltGrid', SALT_LEVELS, 'single', 'active-default', v => { saltLevel = v; });
+
+  // HR delta calculation on input
+  hrLying.addEventListener('input', calcHrDelta);
+  hrSitting.addEventListener('input', calcHrDelta);
+  hrStanding.addEventListener('input', calcHrDelta);
+
+  // Log entry button
+  document.getElementById('logEntryBtn').addEventListener('click', logEntry);
+
+  // History toggle
+  document.getElementById('historyToggle').addEventListener('click', () => {
+    historyOpen = !historyOpen;
+    historyContent.style.display = historyOpen ? 'block' : 'none';
+    chevron.classList.toggle('open', historyOpen);
+  });
+
+  // Export / Import
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('importBtn').addEventListener('click', () => csvFileInput.click());
+  csvFileInput.addEventListener('change', (e) => {
+    if (e.target.files[0]) {
+      importCSV(e.target.files[0]);
+      e.target.value = '';
+    }
+  });
+
+  // Doctor Summary
+  document.getElementById('summaryBtn').addEventListener('click', showSummary);
+  document.getElementById('summaryBackBtn').addEventListener('click', hideSummary);
+
+  // Render existing entries
+  renderHistory();
+
+</script>
+</body>
+</html>
