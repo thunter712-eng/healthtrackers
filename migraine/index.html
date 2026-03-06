@@ -140,8 +140,52 @@
     /* Severity buttons (single-select, 3 columns) */
     .severity-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
       gap: 8px;
+    }
+
+    .toggle-btn.active-none {
+      background: #e2e8f0;
+      border-color: #a0aec0;
+      color: #4a5568;
+    }
+
+    .severity-badge.none {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    .mini-badge.none { background: #e2e8f0; color: #4a5568; }
+
+    /* ── Blood Sugar Input ─────────────────────────────── */
+    .blood-sugar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .blood-sugar-input {
+      width: 100px;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 10px;
+      font-size: 16px;
+      color: #1a202c;
+      background: #fff;
+      text-align: center;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .blood-sugar-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+
+    .blood-sugar-unit {
+      font-size: 14px;
+      color: #718096;
     }
 
     .toggle-btn.active-mild {
@@ -683,6 +727,15 @@
     <input type="date" class="date-input" id="dateInput">
   </div>
 
+  <!-- Blood Sugar Level -->
+  <div class="card">
+    <div class="section-label">Blood Sugar Level</div>
+    <div class="blood-sugar-row">
+      <input type="number" class="blood-sugar-input" id="bloodSugarInput" min="0" max="600" placeholder="0">
+      <span class="blood-sugar-unit">mg/dL</span>
+    </div>
+  </div>
+
   <!-- Severity -->
   <div class="card">
     <div class="section-label">Pain Severity</div>
@@ -800,7 +853,7 @@
 
   const STORAGE_KEY = 'migraine_tracker_entries';
 
-  const SEVERITY_LEVELS = ['Mild', 'Moderate', 'Severe'];
+  const SEVERITY_LEVELS = ['None', 'Mild', 'Moderate', 'Severe'];
 
   const PAIN_LOCATIONS = [
     'Left Side', 'Right Side', 'Front/Forehead',
@@ -846,6 +899,7 @@
   // ═══════════════════════════════════════════════════════
 
   const dateInput = document.getElementById('dateInput');
+  const bloodSugarInput = document.getElementById('bloodSugarInput');
   const durationHours = document.getElementById('durationHours');
   const durationMinutes = document.getElementById('durationMinutes');
   const notesInput = document.getElementById('notesInput');
@@ -971,6 +1025,7 @@
   function buildSeverityGrid() {
     const container = document.getElementById('severityGrid');
     const colorMap = {
+      'None':     'active-none',
       'Mild':     'active-mild',
       'Moderate': 'active-moderate',
       'Severe':   'active-severe',
@@ -986,7 +1041,7 @@
       btn.addEventListener('click', () => {
         // Deselect all
         container.querySelectorAll('.toggle-btn').forEach(b => {
-          b.classList.remove('active-mild', 'active-moderate', 'active-severe');
+          b.classList.remove('active-none', 'active-mild', 'active-moderate', 'active-severe');
         });
         btn.classList.add(colorMap[level]);
         severity = level;
@@ -1079,6 +1134,7 @@
           <div class="entry-top-row">
             <div class="entry-meta">
               <span class="entry-date">${entry.date}</span>
+              ${entry.bloodSugar != null ? `<span class="entry-duration">BS: ${entry.bloodSugar} mg/dL</span>` : ''}
               ${entry.severity ? `<span class="severity-badge ${sevClass}">${entry.severity}</span>` : ''}
               ${entry.duration ? `<span class="entry-duration">${entry.duration}</span>` : ''}
             </div>
@@ -1110,9 +1166,11 @@
       return;
     }
 
+    const bsVal = bloodSugarInput.value.trim();
     const entry = {
       id: Date.now(),
       date: dateInput.value || todayStr(),
+      bloodSugar: bsVal ? parseInt(bsVal, 10) : null,
       severity: severity,
       painLocation: painLocations.slice(),
       duration: buildDuration(durationHours.value, durationMinutes.value),
@@ -1152,6 +1210,9 @@
     // Reset date to today
     dateInput.value = todayStr();
 
+    // Clear blood sugar
+    bloodSugarInput.value = '';
+
     // Clear duration
     durationHours.value = '';
     durationMinutes.value = '';
@@ -1162,7 +1223,7 @@
     // Reset all toggle buttons visually
     document.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.classList.remove(
-        'active-default', 'active-mild', 'active-moderate', 'active-severe',
+        'active-default', 'active-none', 'active-mild', 'active-moderate', 'active-severe',
         'active-trigger', 'active-medication'
       );
     });
@@ -1189,9 +1250,10 @@
     }
 
     const sorted = sortEntries(entries);
-    const header = 'Date,Severity,Pain Location,Duration,Symptoms,Triggers,Medications,Aura,Notes';
+    const header = 'Date,Blood Sugar,Severity,Pain Location,Duration,Symptoms,Triggers,Medications,Aura,Notes';
 
     const rows = sorted.map(e => {
+      const bs = e.bloodSugar != null ? e.bloodSugar : '';
       const loc = csvField((e.painLocation || []).join(', '));
       const sym = csvField((e.symptoms || []).join(', '));
       const trig = csvField((e.triggers || []).join(', '));
@@ -1199,11 +1261,11 @@
       const auraStr = e.aura === true ? 'Yes' : e.aura === false ? 'No' : '';
       const notes = csvField(e.notes || '');
 
-      return `${e.date},${e.severity || ''},${loc},${e.duration || ''},${sym},${trig},${med},${auraStr},${notes}`;
+      return `${e.date},${bs},${e.severity || ''},${loc},${e.duration || ''},${sym},${trig},${med},${auraStr},${notes}`;
     });
 
     const csv = header + '\n' + rows.join('\n');
-    downloadFile('migraine_log.csv', csv, 'text/csv');
+    downloadFile(`migraine_log_${todayStr()}.csv`, csv, 'text/csv');
     showToast('CSV exported!');
   }
 
@@ -1258,17 +1320,22 @@
 
         for (let i = 1; i < lines.length; i++) {
           const fields = parseCSVLine(lines[i]);
-          if (fields.length < 9) continue;
 
-          const date = fields[0];
-          const sev = fields[1];
-          const locationStr = fields[2];
-          const dur = fields[3];
-          const symptomsStr = fields[4];
-          const triggersStr = fields[5];
-          const medsStr = fields[6];
-          const auraStr = fields[7];
-          const notes = fields[8];
+          // Support both old format (9 fields, no blood sugar) and new format (10 fields)
+          let date, bs, sev, locationStr, dur, symptomsStr, triggersStr, medsStr, auraStr, notes;
+          if (fields.length >= 10) {
+            // New format: Date, Blood Sugar, Severity, ...
+            date = fields[0]; bs = fields[1]; sev = fields[2];
+            locationStr = fields[3]; dur = fields[4]; symptomsStr = fields[5];
+            triggersStr = fields[6]; medsStr = fields[7]; auraStr = fields[8]; notes = fields[9];
+          } else if (fields.length >= 9) {
+            // Old format: Date, Severity, Pain Location, ...
+            date = fields[0]; bs = ''; sev = fields[1];
+            locationStr = fields[2]; dur = fields[3]; symptomsStr = fields[4];
+            triggersStr = fields[5]; medsStr = fields[6]; auraStr = fields[7]; notes = fields[8];
+          } else {
+            continue;
+          }
 
           // Check for duplicate
           const isDuplicate = entries.some(
@@ -1279,6 +1346,7 @@
           const entry = {
             id: Date.now() + i,
             date: date,
+            bloodSugar: bs ? parseInt(bs, 10) : null,
             severity: sev,
             painLocation: parseSplit(locationStr),
             duration: dur,
@@ -1379,6 +1447,7 @@
     const thirtyDayStr = `${y}-${m}-${d}`;
 
     const last30 = entries.filter(e => e.date >= thirtyDayStr);
+    const noneCount = last30.filter(e => e.severity === 'None').length;
     const mildCount = last30.filter(e => e.severity === 'Mild').length;
     const modCount = last30.filter(e => e.severity === 'Moderate').length;
     const severeCount = last30.filter(e => e.severity === 'Severe').length;
@@ -1456,6 +1525,7 @@
         return `
           <tr>
             <td>${shortDate(e.date)}</td>
+            <td>${e.bloodSugar != null ? e.bloodSugar : '—'}</td>
             <td>${e.severity ? `<span class="mini-badge ${sevClass}">${e.severity}</span>` : ''}</td>
             <td>${e.duration || '—'}</td>
             <td>${keySym || '—'}</td>
@@ -1466,7 +1536,7 @@
       tableContainer.innerHTML = `
         <table class="recent-table">
           <thead>
-            <tr><th>Date</th><th>Severity</th><th>Duration</th><th>Key Symptoms</th></tr>
+            <tr><th>Date</th><th>BS</th><th>Severity</th><th>Duration</th><th>Key Symptoms</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
